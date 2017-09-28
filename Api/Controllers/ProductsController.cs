@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using Api.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,34 +10,6 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Controllers
 {
-    [Route("api/v1/[controller]")]
-    public class AuthController : Controller
-    {
-        [HttpPost]
-        [AllowAnonymous]
-        public IActionResult Post([FromForm] ClientCredentials credentials)
-        {
-            var plainText = "This is my shared, not so secret, secret!";
-            SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainText));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, "john@doe.com"),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-            };
-
-            var token = new JwtSecurityToken(
-                "http://localhost",
-                "http://localhost",
-                claims,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: creds);
-
-            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
-        }
-    }
-
     [Route("api/v1/[controller]")]
     public class ProductsController : Controller
     {
@@ -66,6 +36,7 @@ namespace Api.Controllers
         #endregion
 
         [HttpGet]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult Get()
         {
             var plainText = "This is my shared, not so secret, secret!";

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Api.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +20,11 @@ namespace Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOptions();
+            services.Configure<JwtConfig>(Configuration);
+
             services.AddMvc();
+
             services.AddAuthentication()
                 .AddJwtBearer(cfg =>
                 {
@@ -28,11 +33,11 @@ namespace Api
 
                     cfg.TokenValidationParameters = new TokenValidationParameters()
                     {
-                        ValidIssuer = "http://localhost",
-                        ValidAudience = "http://localhost",
+                        ValidIssuer = Configuration["Issuer"],
+                        ValidAudience = Configuration["Audience"],
                         IssuerSigningKey =
                             new SymmetricSecurityKey(
-                                Encoding.UTF8.GetBytes("This is my shared, not so secret, secret!"))
+                                Encoding.UTF8.GetBytes(Configuration["Secret"]))
                     };
                 });
         }
