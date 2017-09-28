@@ -1,11 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 using Api.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Api.Controllers
 {
+    [Route("api/v1/[controller]")]
+    public class AuthController : Controller
+    {
+        [HttpPost]
+        [AllowAnonymous]
+        public IActionResult Post([FromForm] ClientCredentials credentials)
+        {
+            var plainText = "This is my shared, not so secret, secret!";
+            SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainText));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, "john@doe.com"),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
+
+            var token = new JwtSecurityToken(
+                "http://localhost",
+                "http://localhost",
+                claims,
+                expires: DateTime.Now.AddMinutes(30),
+                signingCredentials: creds);
+
+            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+        }
+    }
+
     [Route("api/v1/[controller]")]
     public class ProductsController : Controller
     {
@@ -34,6 +68,23 @@ namespace Api.Controllers
         [HttpGet]
         public IActionResult Get()
         {
+            var plainText = "This is my shared, not so secret, secret!";
+            SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainText));
+            var tokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidAudiences = new string[]
+                {
+                    "http://my.website.com",
+                    "http://my.otherwebsite.com"
+                },
+                ValidIssuers = new string[]
+                {
+                    "http://my.tokenissuer.com",
+                    "http://my.othertokenissuer.com"
+                },
+                IssuerSigningKey = key
+            };
+            
             lock (Lock)
             {
                 return Ok(Products.Values);
@@ -93,6 +144,7 @@ namespace Api.Controllers
         #endregion
 
         [HttpPut("{sku}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult Put(string sku, [FromBody] Product product)
         {
             lock (Lock)
@@ -111,6 +163,7 @@ namespace Api.Controllers
         }
 
         [HttpPost]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult Post([FromBody] Product product)
         {
             lock (Lock)
@@ -122,6 +175,7 @@ namespace Api.Controllers
         }
 
         [HttpDelete("{sku}")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public IActionResult Delete(string sku)
         {
             lock (Lock)
