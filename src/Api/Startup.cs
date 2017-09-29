@@ -31,7 +31,7 @@ namespace Api
                     cfg.RequireHttpsMetadata = false;
                     cfg.SaveToken = true;
 
-                    cfg.TokenValidationParameters = new TokenValidationParameters()
+                    cfg.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidIssuer = Configuration["Issuer"],
                         ValidAudience = Configuration["Audience"],
