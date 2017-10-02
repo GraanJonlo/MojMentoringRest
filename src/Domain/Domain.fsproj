@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="DomainTypes.fs" />
     <Compile Include="UseCases.fs" />
   </ItemGroup>
 
