@@ -5,6 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Infrastructure.fs" />
+    <Compile Include="DomainTypes.fs" />
+    <Compile Include="Category.fs" />
     <Compile Include="UseCases.fs" />
   </ItemGroup>
 
